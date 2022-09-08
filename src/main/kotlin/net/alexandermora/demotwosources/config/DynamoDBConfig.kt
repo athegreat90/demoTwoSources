@@ -25,19 +25,16 @@ class DynamoDBConfig {
     @Value("\${amazon.aws.secretkey}")
     private val amazonAWSSecretKey: String? = null
 
-    @PostConstruct
-    private fun init()
-    {
-        println("Endpoint: $amazonDynamoDBEndpoint - Key: $amazonAWSAccessKey - secretKey: $amazonAWSSecretKey")
-    }
+    @Value("\${amazon.aws.region:us-east-1a}")
+    private val amazonAwsRegion: String? = null
 
     @Bean
     fun amazonDynamoDB(): AmazonDynamoDB? {
-        val amazonDynamoDB: AmazonDynamoDB = AmazonDynamoDBClient(amazonAWSCredentials())
-        if (StringUtils.hasText(amazonDynamoDBEndpoint)) {
-            amazonDynamoDB.setEndpoint(amazonDynamoDBEndpoint)
-        }
-        return amazonDynamoDB
+        val endpoint = EndpointConfiguration(amazonDynamoDBEndpoint, amazonAwsRegion)
+        val credentialsProvider = AWSStaticCredentialsProvider(amazonAWSCredentials())
+        return AmazonDynamoDBClientBuilder
+            .standard()
+            .withCredentials(credentialsProvider).withEndpointConfiguration(endpoint).build()
     }
 
     @Bean
